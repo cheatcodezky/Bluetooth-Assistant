@@ -53,7 +53,7 @@ public class ConnectedThread extends Thread {
 
     public void run() {
         byte[] buffer = new byte[1024];  // buffer store for the stream
-        int bytes; // bytes returned from read()
+        int bytes = 0; // bytes returned from read()
 
         // Keep listening to the InputStream until an exception occurs
         while (true) {
@@ -61,9 +61,19 @@ public class ConnectedThread extends Thread {
                 // Read from the InputStream
                 bytes = mmInStream.read(buffer);
                 // Send the obtained bytes to the UI activity
-                String str = new String(buffer, "ISO-8859-1");
+
+                String str = new String(buffer);
                 str = str.substring(0, bytes);
+
+
+                while (bytes <3)
+                {
+                    bytes += mmInStream.read(buffer);
+                    str += new String(buffer);
+                    str = str.substring(0,bytes);
+                }
                 Log.e("recv", str);
+
                 Bundle bundle = new Bundle();
                 bundle.putString("Times",str);
                 intent.putExtras(bundle);

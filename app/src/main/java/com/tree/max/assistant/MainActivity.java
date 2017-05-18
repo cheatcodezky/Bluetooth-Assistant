@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Vibrator;
+import android.support.annotation.IntegerRes;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
@@ -23,13 +25,18 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
 
-    final int NUMBER_CHANGED=1;
+    final int NUMBER_CHANGED=1;//用来判断是否接到数据
+    final int  WARNING =2 ;
     TextView numberView;
+    final String name = "HC-06";//设备名字
     LinearLayout liitleButton ;
     FrameLayout contentFrameLayout ;
     Button startBuletooth,connectBlueTooth,dataButton;
@@ -39,6 +46,13 @@ public class MainActivity extends AppCompatActivity {
     BroadcastReceiver receiver;
     String number = "0";
     LocalReceiver localReceiver;
+
+    Vibrator vibrator ;
+    long [] pattern = {100,400,100,400}; // 停止 开启 停止 开启
+
+    String patter = "(\\d+)";
+    Pattern r = Pattern.compile(patter);
+    Matcher matcher;
     int i  = 0;
 
     final Handler handler = new Handler(){
@@ -46,7 +60,12 @@ public class MainActivity extends AppCompatActivity {
         public void handleMessage(Message msg) {
             switch (msg.what){
                 case NUMBER_CHANGED:
-                    numberView.setText(number);
+                    connectBlueTooth.setText("已连接");
+                    numberView.setText(number);//更改UI数据
+                    break;
+                case WARNING:
+                    Toast.makeText(MainActivity.this,"Warning",Toast.LENGTH_LONG);
+                    vibrator.vibrate(pattern,2);
                     break;
             }
         }
@@ -58,11 +77,13 @@ public class MainActivity extends AppCompatActivity {
         init();
         circle();
 
+        vibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
+        connectBlueTooth.setText("连接手环");
 
 //        arrayAdapter = new ArrayAdapter<String>(MainActivity.this,R.layout.list_item);
         listView.setAdapter(arrayAdapter);
 
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();//蓝牙适配器
 
         if (bluetoothAdapter == null)
         {
@@ -78,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
                     BluetoothDevice device =intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                    // arrayAdapter.add(device.getName()+ " : "+device.getAddress());
 
-                 if (device.getName().equals("HC-06")) {
+                 if (device.getName().equals(name)) {
                      findDevice(device);
                      Log.e("device",device.getName());
                  }
@@ -86,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        IntentFilter intentFilter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        IntentFilter intentFilter = new IntentFilter(BluetoothDevice.ACTION_FOUND);//找到设备发出广播
         registerReceiver(receiver,intentFilter);
 
 
@@ -100,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
     {
         super.onResume();
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction("LOCAL_BROAD_EV_PROGRESS");
+        intentFilter.addAction("LOCAL_BROAD_EV_PROGRESS");//本地UI线程广播
         localReceiver= new LocalReceiver();
         LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(this);
         localBroadcastManager.registerReceiver(localReceiver,intentFilter);
@@ -115,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
     }
     public void findDevice(BluetoothDevice device)
     {
-        if (device.getName().equals("HC-06"))
+        if (device.getName().equals(name))
         {
             Log.e("device","find");
             if (bluetoothAdapter.isDiscovering())
@@ -185,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onClick(View view) {
             switch (view.getId()){
-                case R.id.startBluetooth:
+                case R.id.startBluetooth://开启蓝牙
                     if (!bluetoothAdapter.isEnabled())
                     {
                         int REQUEST_ENABLE_BT = 1;
@@ -194,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     break;
-                case R.id.connectBluetooth:
+                case R.id.connectBluetooth://扫描,连接设备
                     if (bluetoothAdapter.isDiscovering()) {
                         bluetoothAdapter.cancelDiscovery();
                         i = 0;
@@ -202,7 +223,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     bluetoothAdapter.startDiscovery();
                     break;
-                case R.id.dataButton:
+                case R.id.dataButton://进入数据界面
                     Intent intent = new Intent(MainActivity.this,DataActivity.class);
                     startActivity(intent);
 
@@ -214,7 +235,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-    private class LocalReceiver extends BroadcastReceiver{
+    private class LocalReceiver extends BroadcastReceiver{//本地ui控制广播
 
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -223,13 +244,26 @@ public class MainActivity extends AppCompatActivity {
                 case "LOCAL_BROAD_EV_PROGRESS":
                     Bundle bundle = intent.getExtras();
                     number = bundle.getString("Times");
+                    matcher = r.matcher(number);
+                    if (matcher.find())
+                        number = matcher.group(1);
+                    else
+                        number = "0";
+                    int key = Integer.valueOf(number);
                     Message msg =new Message();
+                    if (key!=0||key<90)
+                    {
+
+                        msg.what = WARNING;
+                        handler.sendMessage(msg);
+                    }
+
                     msg.what =NUMBER_CHANGED;
                     handler.sendMessage(msg);
                     i++;
                     if (i==1)
                     {
-                        Snackbar.make(startBuletooth,"已连接到手环",Snackbar.LENGTH_SHORT).show();
+                        Snackbar.make(startBuletooth,"已接收到数据",Snackbar.LENGTH_SHORT).show();
                     }
                     break;
             }

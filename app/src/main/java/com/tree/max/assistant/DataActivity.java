@@ -12,12 +12,16 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.util.PatternsCompat;
+import android.util.Log;
 
 import com.idtk.smallchart.chart.LineChart;
 import com.idtk.smallchart.data.LineData;
 import com.idtk.smallchart.interfaces.iData.ILineData;
 
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by max on 17-5-18.
@@ -29,41 +33,60 @@ public class DataActivity extends Activity {
     ArrayList<ILineData> dataList;
     ArrayList<PointF> linePointList ;
     LocalReceiver localReceiver;
-    int[] x = new int[10];
-    int[] y = new int[10];
+    PointF pointF;
+    String patter = "(\\d+)";
+    Pattern r = Pattern.compile(patter);
+    Matcher matcher;
+    int[] x = new int[12];
+    int[] y = new int[12];
     final int NUMBER_CHANGED = 1;
-    String number;
-
+    static String number;
+    static Bundle bundle;
 
     final Handler handler = new Handler(){
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what){
                 case NUMBER_CHANGED:
-                    lineChart.setDataList(dataList);
+                    Log.e("find","ddd");
+
+                    lineChart.invalidate();
                     break;
             }
         }
     };
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        Log.e("DataActivity","start");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.data_view);
         init();
 
 
-        linePointList.add(new PointF(1,2));
-        linePointList.add(new PointF(10,10));
-        linePointList.add(new PointF(100,100));
-        linePointList.add(new PointF(200,200));
+        for (int i = 1;i<=9;i++)
+        {
+            y[i-1] = y[i];
+        }
+        y[0] = 100;
+        y[1] = 0;
+        linePointList.clear();
+        for (int i = 0 ; i<=10;i++)
+        {
+            linePointList.add(new PointF(x[i],y[i]));
+        }
+        Log.e("DataActivity","Broadcast is touched");
         lineData.setValue(linePointList);
+        dataList.clear();
+        dataList.add(lineData);
         lineData.setColor(Color.CYAN);
         lineData.setPaintWidth(1);
         lineData.setTextSize(4);
-        dataList.add(lineData);
 
         lineChart.isAnimated = false;
         lineChart.setDataList(dataList);
+
+
+
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("LOCAL_BROAD_EV_PROGRESS");
         localReceiver= new LocalReceiver();
@@ -74,8 +97,9 @@ public class DataActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+
         super.onDestroy();
-        unregisterReceiver(localReceiver);
+
     }
 
     public void init()
@@ -85,10 +109,13 @@ public class DataActivity extends Activity {
         linePointList = new ArrayList<>();
         dataList = new ArrayList<>();
 
-        for (int j= 0; j<10;j++)
+        for (int j= 0; j<12;j++)
         {
-            x[j] = j*10;
+            x[j] = (j-2)*10;
         }
+        x[1] = 0;
+        x[0] = 0;
+        x[2] = 0;
     }
     private class LocalReceiver extends BroadcastReceiver
     {
@@ -97,23 +124,37 @@ public class DataActivity extends Activity {
         public void onReceive(Context context, Intent intent) {
             switch(intent.getAction()) {
                 case "LOCAL_BROAD_EV_PROGRESS":
-                    Bundle bundle = intent.getExtras();
+                    bundle = intent.getExtras();
                     number = bundle.getString("Times");
-                    for (int i = 1;i<=9;i++)
+                    matcher = r.matcher(number);
+                    if (matcher.find())
+                        number = matcher.group(1);
+                    else
+                        number = "0";
+
+                    for (int i = 3;i<=10;i++)
                     {
-                        x[i-1] = x[i];
                         y[i-1] = y[i];
                     }
-                    x[9] = 10;
-                    y[9] = 10;
+
+                    y[10] = Integer.valueOf(number);
                     linePointList.clear();
-                    for (int i = 0 ; i<10;i++)
+
+                    for (int i = 0 ; i<11;i++)
                     {
-                        linePointList.add(new PointF(x[i],y[i]));
+                        pointF = new PointF(x[i],y[i]);
+                        linePointList.add(pointF);
                     }
+                    Log.e("DataActivity","Broadcast is touched");
                     lineData.setValue(linePointList);
                     dataList.clear();
                     dataList.add(lineData);
+                    lineData.setColor(Color.CYAN);
+                    lineData.setPaintWidth(1);
+                    lineData.setTextSize(4);
+                    lineChart.isAnimated = false;
+
+                    lineChart.setDataList(dataList);
                     Message msg =new Message();
                     msg.what =NUMBER_CHANGED;
                     handler.sendMessage(msg);
