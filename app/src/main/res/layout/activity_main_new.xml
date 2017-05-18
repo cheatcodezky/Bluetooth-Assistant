@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.tree.max.assistant.MainActivity">
+
+    <LinearLayout
+        android:background="#98bce1"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+
+        android:layout_height="wrap_content">
+
+        <FrameLayout
+            android:id= "@+id/contentLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="45dp"
+            android:layout_marginBottom="45dp"
+            android:layout_marginLeft="45dp"
+            android:layout_marginRight="45dp"
+            android:gravity="center"
+            android:layout_gravity="center_horizontal">
+
+
+            <TextView
+                android:id="@+id/numberTextView"
+                android:layout_width="180dp"
+                android:layout_height="180dp"
+                android:text="0"
+                android:singleLine="true"
+                android:textSize="50dp"
+                android:textColor="#fff"
+                android:background="@drawable/circle_shape"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:gravity="center"
+                android:layout_gravity="center_horizontal"
+                />
+            <LinearLayout
+                android:id="@+id/little_circle"
+                android:layout_width="190dp"
+                android:layout_height="190dp">
+                <Button
+
+                    android:background="@drawable/little_circle"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:layout_gravity="center_vertical"
+                    />
+            </LinearLayout>
+
+        </FrameLayout>
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:background="#fff"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+
+
+        <Button
+            android:id="@+id/startBluetooth"
+            android:background="#fff"
+            android:textSize="20dp"
+            android:text="开启蓝牙"
+            android:textColor="#91cc42"
+            android:shadowColor="#0a0909"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginBottom="1dp"/>
+
+        <Button
+            android:id="@+id/connectBluetooth"
+            android:textSize="20dp"
+            android:background="#fff"
+            android:text="连接蓝牙"
+            android:textColor="#ec9494"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginBottom="1dp"/>
+
+        <Button
+            android:id="@+id/dataButton"
+            android:textSize="20dp"
+            android:textColor="#7d8af1"
+            android:background="#fff"
+            android:text="数据记录"
+            android:layout_width="match_parent"
+            android:layout_height="60dp" />
+
+
+        <ListView
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:id="@+id/listView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+
+        </ListView>
+    </LinearLayout>
+
+</LinearLayout>
